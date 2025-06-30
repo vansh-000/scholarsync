@@ -1,28 +1,36 @@
 import formidable from 'formidable';
 import fs from 'fs';
-import { promisify } from 'util';
-import { parsePDF, parseDOCX, extractResumeData } from '@/lib/utils/parseResume';
-import { MAX_FILE_SIZE, isValidFileType } from '@/lib/middleware/validateFile';
+import path from 'path';
+import { extractText } from '@/lib/utils/parseResume';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+export const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
 
-const unlink = promisify(fs.unlink);
+const isValidFileType = mimetype => ALLOWED_TYPES.includes(mimetype);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
+    const tmpDir = path.join(process.cwd(), 'tmp');
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    }
+
     const form = formidable({
-      uploadDir: './tmp',
+      uploadDir: tmpDir,
       keepExtensions: true,
       maxFileSize: MAX_FILE_SIZE,
-      filter: ({ mimetype }) => isValidFileType(mimetype || ''),
     });
 
     const [fields, files] = await form.parse(req);
@@ -34,25 +42,24 @@ export default async function handler(req, res) {
 
     if (!isValidFileType(file.mimetype)) {
       await unlink(file.filepath);
-      return res
-        .status(400)
-        .json({ error: 'Invalid file type. Only PDF and DOCX files are allowed.' });
+      return res.status(400).json({
+        error: 'Invalid file type. Only PDF and DOCX files are allowed.',
+      });
     }
 
-    let parsedData;
+    let extractedText;
     try {
-      parsedData =
-        file.mimetype === 'application/pdf'
-          ? await parsePDF(file.filepath)
-          : await parseDOCX(file.filepath);
+      extractedText = await extractText(file.filepath, file.mimetype);
     } catch (parseError) {
+      console.error('Parse error:', parseError);
       await unlink(file.filepath);
       return res.status(500).json({ error: 'Failed to parse resume file' });
     }
 
     await unlink(file.filepath);
+    const structuredData = extractResumeData(extractedText);
 
-    const structuredData = extractResumeData(parsedData.text);
+    console.log('Structured Data:', structuredData);
 
     res.status(200).json({
       success: true,
@@ -66,6 +73,9 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Resume upload error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
 }
