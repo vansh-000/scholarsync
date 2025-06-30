@@ -1,3 +1,4 @@
+import { getCSRFToken } from '@/lib/utils/getCSRFToken';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
@@ -6,22 +7,22 @@ export const generateSuggestions = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      
-      // Fix: Correct state access and property names
       const resumeData = state.resume?.parsedData || null;
       const scholarData = state.scholar?.profileData?.data || null;
-      
-      // Validate that we have at least one data source
       if (!resumeData && !scholarData) {
         throw new Error('No resume or scholar data available');
       }
-      
-      // Fix: Send correct property names that match API expectations
-      const response = await axios.post('/api/suggestions/generate', { 
+      const csrfToken = await getCSRFToken();
+      const response = await axios.post('/api/suggestions/generate', {
         resumeData,
-        scholarData 
+        scholarData
+      }, {
+        headers: {
+          'x-csrf-token': csrfToken,
+          'Content-Type': 'application/json',
+        },
       });
-      
+
       return response.data;
     } catch (error) {
       console.error('Generate suggestions error:', error);
@@ -32,10 +33,10 @@ export const generateSuggestions = createAsyncThunk(
 
 const suggestionSlice = createSlice({
   name: 'suggestions',
-  initialState: { 
-    suggestions: [], 
+  initialState: {
+    suggestions: [],
     loading: false,
-    error: null 
+    error: null
   },
   reducers: {
     clearSuggestions: (state) => {

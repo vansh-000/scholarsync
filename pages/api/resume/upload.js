@@ -3,21 +3,28 @@ import fs from 'fs';
 import path from 'path';
 import { unlink } from 'fs/promises';
 import { extractResumeData, extractText } from '@/lib/utils/parseResume';
+import cors from '@/lib/middleware/cors';
+import applyRateLimit from '@/lib/middleware/rateLimit';
+import { verifyCSRFToken } from '@/lib/middleware/csrf';
+import { isValidFileType, MAX_FILE_SIZE } from '@/lib/middleware/validateFile';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_TYPES = [
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-];
-
-const isValidFileType = mimetype => ALLOWED_TYPES.includes(mimetype);
 
 export default async function handler(req, res) {
+
+  await cors(req, res);
+  await applyRateLimit(req, res);
+  const secret = process.env.CSRF_SECRET || 'default-secret';
+  const csrfToken = req.headers['x-csrf-token'];
+
+  if (!verifyCSRFToken(secret, csrfToken)) {
+    return res.status(403).json({ error: 'Invalid CSRF token' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }

@@ -1,11 +1,17 @@
-import { limiter, runMiddleware } from '@/lib/utils/rateLimit';
 import { scrapeScholarProfile } from '@/lib/utils/scholarScraper';
+import cors from '@/lib/middleware/cors';
+import applyRateLimit from '@/lib/middleware/rateLimit';
+import { verifyCSRFToken } from '@/lib/middleware/csrf';
 
 export default async function handler(req, res) {
-  try {
-    await runMiddleware(req, res, limiter);
-  } catch (error) {
-    return res.status(429).json({ error: 'Rate limit exceeded' });
+
+  await cors(req, res);
+  await applyRateLimit(req, res);
+  const secret = process.env.CSRF_SECRET || 'default-secret';
+  const csrfToken = req.headers['x-csrf-token'];
+
+  if (!verifyCSRFToken(secret, csrfToken)) {
+    return res.status(403).json({ error: 'Invalid CSRF token' });
   }
 
   if (req.method !== 'POST') {

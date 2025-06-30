@@ -1,8 +1,15 @@
+import { getCSRFToken } from '@/lib/utils/getCSRFToken';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 export const uploadResume = createAsyncThunk('resume/upload', async (formData) => {
-  const res = await axios.post('/api/resume/upload', formData);
+  const csrfToken = await getCSRFToken();
+  const res = await axios.post('/api/resume/upload', formData, {
+    headers: {
+      'x-csrf-token': csrfToken,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return res.data;
 });
 

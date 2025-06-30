@@ -1,14 +1,17 @@
-// Fix the import - use consistent import style
-import { limiter, runMiddleware } from '@/lib/utils/rateLimit';
 import { generateProjectSuggestions } from '@/lib/utils/generateSuggestions';
+import cors from '@/lib/middleware/cors';
+import applyRateLimit from '@/lib/middleware/rateLimit';
+import { verifyCSRFToken } from '@/lib/middleware/csrf';
 
 export default async function handler(req, res) {
-  try {
-    await runMiddleware(req, res, limiter);
-  } catch (error) {
-    return res.status(429).json({ error: 'Rate limit exceeded' });
-  }
+  await cors(req, res);
+  await applyRateLimit(req, res);
+  const secret = process.env.CSRF_SECRET || 'default-secret';
+  const csrfToken = req.headers['x-csrf-token'];
 
+  if (!verifyCSRFToken(secret, csrfToken)) {
+    return res.status(403).json({ error: 'Invalid CSRF token' });
+  }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -21,9 +24,9 @@ export default async function handler(req, res) {
 
   try {
     const suggestions = await generateProjectSuggestions(resumeData, scholarData);
-    
+
     console.log('Generated suggestions:', suggestions.length);
-    
+
     res.status(200).json({
       success: true,
       data: suggestions,
@@ -31,9 +34,9 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Suggestion generation error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to generate project suggestions',
-      details: err.message 
+      details: err.message
     });
   }
 }
