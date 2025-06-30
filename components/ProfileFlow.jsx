@@ -7,12 +7,12 @@ import ScholarProfileView from '../components/ScholarProfileView';
 import ProjectSuggestions from '../components/ProjectSuggestions';
 import { generateSuggestions } from '../redux/slices/suggestionsSlice';
 
-import { useDispatch} from 'react-redux';
-import { Sparkles, ArrowRight, Upload, BookOpen, Lightbulb } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { Sparkles, ArrowRight, FileCheck, BookOpen, Lightbulb } from 'lucide-react';
 
 export default function ProfileFlow({ resumeData, scholarData, suggestions, suggestionsLoading, currentSection, setCurrentSection }) {
 
-  const dispatch = useDispatch();
+    const dispatch = useDispatch();
     const handleGenerateSuggestions = () => {
         dispatch(generateSuggestions());
         setCurrentSection('suggestions');
@@ -58,16 +58,17 @@ export default function ProfileFlow({ resumeData, scholarData, suggestions, sugg
 
                     <div className="space-y-8">
                         {resumeData && (
-                            <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
-                                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-2xl">
-                                    <h3 className="text-xl font-bold text-white flex items-center">
-                                        <Upload className="h-6 w-6 mr-3" />
-                                        Resume Analysis
-                                    </h3>
+                            <div className="bg-white rounded-2xl  shadow-xl border border-gray-100 overflow-hidden">
+                                <div className="bg-gradient-to-r  from-blue-600 to-purple-600 p-6 text-white">
+                                    <div className="flex items-center space-x-3">
+                                        <FileCheck className="h-8 w-8" />
+                                        <div>
+                                            <h2 className="text-2xl font-bold">Resume Analysis</h2>
+                                            <p className="text-blue-100">Your profile has been successfully parsed</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="p-6">
                                     <ParsedResumeView />
-                                </div>
                             </div>
                         )}
 
