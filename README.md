@@ -1,40 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# ScholarSync – Resume & Google Scholar Integration App
 
-## Getting Started
+ScholarSync is a Next.js-based full-stack web application that helps users parse resumes, scrape Google Scholar profiles, and receive intelligent project suggestions based on academic data. It uses Redux for state management and includes several middleware layers for security and performance.
 
-First, run the development server:
+---
 
+## Features
+
+- Resume upload and parsing
+- Google Scholar scraping
+- Project suggestion engine
+- CSRF protection, CORS, and rate limiting
+- Modular structure with reusable middleware
+- State management via Redux Toolkit
+
+---
+
+## Folder Structure
+
+```bash
+.
+├── components/             # UI components
+├── lib/
+│   ├── middleware/         # Security and utility middleware
+│   └── utils/              # Parsing and scraping logic
+├── pages/
+│   ├── api/                # Backend API routes
+│   └── index.js            # Homepage
+├── public/                 # Static files
+├── redux/                  # Redux store and slices
+├── styles/                 # Tailwind CSS and global styles
+└── README.md
+```
+
+---
+
+## Middleware Usage
+
+All API routes are secured with the following middlewares:
+
+- **CORS**: Restricts access to specific origins (`lib/middleware/cors.js`)
+- **CSRF Protection**: Mitigates cross-site request forgery (`lib/middleware/csrf.js`)
+- **Rate Limiting**: Prevents brute-force and abuse (`lib/middleware/rateLimit.js`)
+- **File Validation**: Ensures uploaded files are of valid type/size (`lib/middleware/validateFile.js`)
+
+
+---
+
+## Setup & Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/your-username/scholarsync.git
+cd scholarsync
+```
+
+2. **Install dependencies**
+```bash
+npm install
+# or
+yarn install
+```
+
+3. **Start the development server**
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit the app at: **http://localhost:3000**
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+---
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+## Technologies Used
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+| Category | Tech Stack |
+|----------|------------|
+| Frontend | Next.js, React, Tailwind CSS |
+| State Mgmt | Redux Toolkit |
+| Backend | Next.js API Routes |
+| Security | Custom Middleware (CSRF, CORS, Rate Limit) |
+| Parsing | Node.js, PDF Parsing Utilities |
+| Web Scraping | Google Scholar Scraper |
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Security Features
 
-To learn more about Next.js, take a look at the following resources:
+| Feature | Purpose |
+|---------|---------|
+| CORS | Restricts unwanted origins |
+| CSRF Tokens | Prevents cross-site request forgery |
+| Rate Limiting | Protects from abuse or brute-force |
+| File Validation | Ensures only safe files are processed |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Author
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+**Vansh Verma**  
+📧 23165@iiitu.ac.in  
+🔗 [LinkedIn](https://linkedin.com/in/vanshverma000)
