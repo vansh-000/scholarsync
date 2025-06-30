@@ -1,4 +1,5 @@
-import limiter, { runMiddleware } from '@/lib/utils/rateLimit';
+// Fix the import - use consistent import style
+import { limiter, runMiddleware } from '@/lib/utils/rateLimit';
 import { generateProjectSuggestions } from '@/lib/utils/generateSuggestions';
 
 export default async function handler(req, res) {
@@ -20,6 +21,9 @@ export default async function handler(req, res) {
 
   try {
     const suggestions = await generateProjectSuggestions(resumeData, scholarData);
+    
+    console.log('Generated suggestions:', suggestions.length);
+    
     res.status(200).json({
       success: true,
       data: suggestions,
@@ -27,6 +31,9 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Suggestion generation error:', err);
-    res.status(500).json({ error: 'Failed to generate project suggestions' });
+    res.status(500).json({ 
+      error: 'Failed to generate project suggestions',
+      details: err.message 
+    });
   }
 }

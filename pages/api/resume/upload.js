@@ -1,7 +1,8 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import { extractText } from '@/lib/utils/parseResume';
+import { unlink } from 'fs/promises';
+import { extractResumeData, extractText } from '@/lib/utils/parseResume';
 
 export const config = {
   api: {
