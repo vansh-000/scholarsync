@@ -1,7 +1,7 @@
 import formidable from 'formidable';
 import fs from 'fs';
-import path from 'path';
 import { unlink } from 'fs/promises';
+import path from 'path';
 import { extractResumeData, extractText } from '@/lib/utils/parseResume';
 import cors from '@/lib/middleware/cors';
 import applyRateLimit from '@/lib/middleware/rateLimit';
@@ -14,14 +14,23 @@ export const config = {
   },
 };
 
-export default async function handler(req, res) {
+function parseForm(req, form) {
+  return new Promise((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) reject(err);
+      else resolve({ fields, files });
+    });
+  });
+}
 
+export default async function handler(req, res) {
   await cors(req, res);
   await applyRateLimit(req, res);
+
   const secret = process.env.CSRF_SECRET || 'default-secret';
   const csrfToken = req.headers['x-csrf-token'];
 
-  if (!verifyCSRFToken(secret, csrfToken)) {
+  if (!csrfToken || !verifyCSRFToken(secret, csrfToken)) {
     return res.status(403).json({ error: 'Invalid CSRF token' });
   }
 
@@ -30,10 +39,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const tmpDir = path.join(process.cwd(), 'tmp');
-    if (!fs.existsSync(tmpDir)) {
-      fs.mkdirSync(tmpDir, { recursive: true });
-    }
+    const tmpDir = '/tmp';
 
     const form = formidable({
       uploadDir: tmpDir,
@@ -41,8 +47,8 @@ export default async function handler(req, res) {
       maxFileSize: MAX_FILE_SIZE,
     });
 
-    const [fields, files] = await form.parse(req);
-    const file = files.resume?.[0];
+    const { fields, files } = await parseForm(req, form);
+    const file = Array.isArray(files.resume) ? files.resume[0] : files.resume;
 
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -65,9 +71,8 @@ export default async function handler(req, res) {
     }
 
     await unlink(file.filepath);
-    const structuredData = extractResumeData(extractedText);
 
-    console.log('Structured Data:', structuredData);
+    const structuredData = extractResumeData(extractedText);
 
     res.status(200).json({
       success: true,
@@ -81,9 +86,10 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Resume upload error:', error);
+    console.error('Stack Trace:', error.stack);
     res.status(500).json({
       error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: error.message,
     });
   }
 }

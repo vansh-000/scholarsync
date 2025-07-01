@@ -3,15 +3,23 @@ import cors from '@/lib/middleware/cors';
 import applyRateLimit from '@/lib/middleware/rateLimit';
 import { verifyCSRFToken } from '@/lib/middleware/csrf';
 
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 export default async function handler(req, res) {
   await cors(req, res);
   await applyRateLimit(req, res);
+
   const secret = process.env.CSRF_SECRET || 'default-secret';
   const csrfToken = req.headers['x-csrf-token'];
 
-  if (!verifyCSRFToken(secret, csrfToken)) {
+  if (!csrfToken || !verifyCSRFToken(secret, csrfToken)) {
     return res.status(403).json({ error: 'Invalid CSRF token' });
   }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -25,7 +33,7 @@ export default async function handler(req, res) {
   try {
     const suggestions = await generateProjectSuggestions(resumeData, scholarData);
 
-    console.log('Generated suggestions:', suggestions.length);
+    console.log('Generated suggestions:', suggestions?.length ?? 0);
 
     res.status(200).json({
       success: true,
@@ -36,7 +44,7 @@ export default async function handler(req, res) {
     console.error('Suggestion generation error:', err);
     res.status(500).json({
       error: 'Failed to generate project suggestions',
-      details: err.message
+      details: err.message || 'Unknown error',
     });
   }
 }

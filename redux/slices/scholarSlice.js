@@ -4,13 +4,16 @@ import axios from 'axios';
 
 export const fetchScholarProfile = createAsyncThunk('scholar/fetch', async url => {
   const csrfToken = await getCSRFToken();
-  const res = await axios.post('/api/scholar/profile', { scholarUrl: url }, {
-    headers: {
-      'x-csrf-token': csrfToken,
-      'Content-Type': 'application/json',
+  const res = await axios.post(
+    '/api/scholar/profile',
+    JSON.stringify({ scholarUrl: url }),
+    {
+      headers: {
+        'x-csrf-token': csrfToken,
+        'Content-Type': 'application/json',
+      },
     }
-
-  });
+  );
   return res.data;
 });
 
