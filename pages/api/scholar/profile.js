@@ -13,8 +13,10 @@ export default async function handler(req, res) {
   await cors(req, res);
   await applyRateLimit(req, res);
 
-  const secret = process.env.CSRF_SECRET || 'default-secret';
+  const secret = process.env.CSRF_SECRET;
   const csrfToken = req.headers['x-csrf-token'];
+  console.log('CSRF Token:', csrfToken);
+  console.log("Token verfiication", verifyCSRFToken(secret, csrfToken));
 
   if (!csrfToken || !verifyCSRFToken(secret, csrfToken)) {
     return res.status(403).json({ error: 'Invalid CSRF token' });
